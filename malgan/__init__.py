@@ -88,10 +88,10 @@ class _DataGroup:  # pylint: disable=too-few-public-methods
 
         :param batch_size: Batch size for training
         """
-        self.train = DataLoader(self.train, batch_size=batch_size, shuffle=True, pin_memory=True)
+        self.train = DataLoader(self.train, batch_size=batch_size, shuffle=True)
         if self.valid:
-            self.valid = DataLoader(self.valid, batch_size=batch_size, pin_memory=True)
-        self.test = DataLoader(self.test, batch_size=batch_size, pin_memory=True)
+            self.valid = DataLoader(self.valid, batch_size=batch_size)
+        self.test = DataLoader(self.test, batch_size=batch_size)
         self.is_loaders = True
 
 

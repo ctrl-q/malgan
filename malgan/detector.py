@@ -76,9 +76,9 @@ class BlackBoxDetector:
         :param y: Labels for the examples
         """
         if isinstance(X, Tensor):
-            X = X.numpy()
+            X = X.cpu().numpy()
         if isinstance(y, Tensor):
-            y = y.numpy()
+            y = y.cpu().numpy()
         self._model.fit(X, y)
         self.training = False
 
