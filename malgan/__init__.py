@@ -168,7 +168,7 @@ class MalGAN(nn.Module):
         logging.debug("Activation Type: %s", self._g.__class__.__name__)
 
         self._bb = BlackBoxDetector(detector_type)
-        self._gen = Generator(M=self.M, Z=self.Z, hidden_size=h_gen, g=self._g)
+        self._gen = Generator(dim_feature_vect=self.M, dim_noise_vect=self.Z, hidden_size=h_gen, activation_fct=self._g)
         self._discrim = Discriminator(width_of_malware=self.M, hidden_layer_size=h_discrim, activation_fct=self._g)
 
         def split_train_valid_test(dataset: Dataset, is_benign: bool):

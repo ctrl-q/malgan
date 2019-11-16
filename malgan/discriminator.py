@@ -1,8 +1,9 @@
 from typing import List
 
 import torch
-from torch import Tensor
 import torch.nn as neural_net
+from torch import Tensor
+
 
 class Discriminator(neural_net.Module):
     EPS = 1e-7

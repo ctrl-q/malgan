@@ -1,59 +1,33 @@
 from typing import List, Tuple
 
 import torch
+import torch.nn as neural_net
 from torch import Tensor
-import torch.nn as nn
 
 TensorTuple = Tuple[Tensor, Tensor]
 
 
-class Generator(nn.Module):
-    r""" MalGAN generator block """
-
-    # noinspection PyPep8Naming
-    def __init__(self, M: int, Z: int, hidden_size: List[int], g: nn.Module):
-        r"""Generator Constructor
-
-        :param M: Dimension of the feature vector \p m
-        :param Z: Dimension of the noise vector \p z
-        :param hidden_size: Width of the hidden layer(s)
-        :param g: Activation function
-        """
+class Generator(neural_net.Module):
+    def __init__(self, dim_feature_vect: int, dim_noise_vect: int, hidden_size: List[int], activation_fct: neural_net.Module):
         super().__init__()
 
-        self._Z = Z
+        self._Z = dim_noise_vect
 
-        # Build the feed forward net
-        self._layers, dim = nn.Sequential(), [M + self._Z] + hidden_size
-        for i, (d_in, d_out) in enumerate(zip(dim[:-1], dim[1:])):
-            self._layers.add_module("FF%02d" % i, nn.Sequential(nn.Linear(d_in, d_out), g))
+        self._layers, dim = neural_net.Sequential(), [dim_feature_vect + self._Z] + hidden_size
+        for counter, (dim_in, dim_out) in enumerate(zip(dim[:-1], dim[1:])):
+            self._layers.add_module("FF%02d" % counter, neural_net.Sequential(neural_net.Linear(dim_in, dim_out), activation_fct))
 
-        # Last layer is always sigmoid
-        layer = nn.Sequential(nn.Linear(dim[-1], M), nn.Sigmoid())
+        layer = neural_net.Sequential(neural_net.Linear(dim[-1], dim_feature_vect), neural_net.Sigmoid())
         self._layers.add_module("FF%02d" % len(dim), layer)
 
-    # noinspection PyUnresolvedReferences
-    def forward(self, m: torch.Tensor,
-                z: torch.Tensor = None) -> TensorTuple:  # pylint: disable=arguments-differ
-        r"""
-        Forward pass through the generator.  Automatically generates the noise vector \p z that
-        is coupled with \p m.
+    def forward(self, input_vect: torch.Tensor, noise_vect: torch.Tensor = None) -> TensorTuple:
+        if noise_vect is None:
+            num_ele = input_vect.shape[0]
+            noise_vect = torch.rand((num_ele, self._Z))
 
-        :param m: Input vector :math:`m`
-        :param z: Noise vector :math:`z`.  If no random vector is specified, the random vector is
-                  generated within this function call via a call to \p torch.rand
-        :return: Tuple of (:math:`m'`, :math:`G_{\theta_{g}}`), i.e., the output tensor with the
-                 feature predictions as well as the smoothed prediction that can be used for
-                 back-propagation.
-        """
-        if z is None:
-            num_ele = m.shape[0]
-            z = torch.rand((num_ele, self._Z))
-
-        # Concatenation of m and z
-        o = torch.cat((m, z), dim=1)
-        o = self._layers.forward(o)
-        g_theta = torch.max(m, o)  # Ensure binary bits only set positive
+        concat = torch.cat((input_vect, noise_vect), dim=1)
+        concat = self._layers.forward(concat)
+        g_theta = torch.max(input_vect, concat)  # Ensure binary bits only set positive
 
         m_prime = (g_theta > 0.5).float()
         return m_prime, g_theta
