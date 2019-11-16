@@ -12,55 +12,41 @@ TorchOrNumpy = Union[torch.Tensor, np.ndarray]
 
 
 # noinspection PyProtectedMember,PyUnresolvedReferences
-def _export_results(model: 'MalGAN', valid_loss: TensorOrFloat, test_loss: TensorOrFloat,
-                    avg_num_bits_changed: TensorOrFloat, y_actual: np.ndarray,
-                    y_mal_orig: TorchOrNumpy, y_prob: TorchOrNumpy, y_hat: np.ndarray) -> str:
-    r"""
-    Exports MalGAN results.
+def _export_results(model: 'MalGAN', avg_validation_loss: TensorOrFloat, avg_test_loss: TensorOrFloat,
+                    avg_num_bits_changed: TensorOrFloat, actual_labels: np.ndarray,
+                    predicted_value_original_malware: TorchOrNumpy, prob_of_malware: TorchOrNumpy, predicted_labels: np.ndarray) -> str:
 
-    :param model: MalGAN model
-    :param valid_loss: Average loss on the malware validation set
-    :param test_loss: Average loss on the malware test set
-    :param avg_num_bits_changed:
-    :param y_actual: Actual labels
-    :param y_mal_orig: Predicted value on the original (unmodified) malware
-    :param y_prob: Probability of malware
-    :param y_hat: Predict labels
-    :return: Results string
-    """
-    if isinstance(y_prob, torch.Tensor):
-        y_prob = y_prob.numpy()
-    if isinstance(y_mal_orig, torch.Tensor):
-        y_mal_orig = y_mal_orig.numpy()
+    if isinstance(prob_of_malware, torch.Tensor):
+        prob_of_malware = prob_of_malware.numpy()
+    if isinstance(predicted_value_original_malware, torch.Tensor):
+        predicted_value_original_malware = predicted_value_original_malware.numpy()
 
     results_file = Path("results.csv")
-    exists = results_file.exists()
-    with open(results_file, "a+") as f_out:
+    file_already_exist = results_file.exists()
+    with open(results_file, "a+") as out_file:
         header = ",".join(["time_completed,M,Z,batch_size,test_set_size,detector_type,activation",
                            "gen_hidden_dim,discim_hidden_dim",
                            "avg_validation_loss,avg_test_loss,avg_num_bits_changed",
                            "auc,orig_mal_detect_rate,mod_mal_detect_rate,ben_mal_detect_rate"])
-        if not exists:
-            f_out.write(header)
+        if not file_already_exist:
+            out_file.write(header)
 
         results = ["\n%s" % datetime.datetime.now(),
                    "%d,%d,%d" % (model.M, model.Z, model.__class__.MALWARE_BATCH_SIZE),
-                   "%d,%s,%s" % (len(y_actual), model._bb.type.name, model._g.__class__.__name__),
+                   "%d,%s,%s" % (len(actual_labels), model._bb.type.name, model._g.__class__.__name__),
                    "\"%s\",\"%s\"" % (str(model.d_gen), str(model.d_discrim)),
-                   "%.15f,%.15f,%.3f" % (valid_loss, test_loss, avg_num_bits_changed)]
+                   "%.15f,%.15f,%.3f" % (avg_validation_loss, avg_test_loss, avg_num_bits_changed)]
 
-        auc = roc_auc_score(y_actual, y_prob)
+        auc = roc_auc_score(actual_labels, prob_of_malware)
         results.append("%.8f" % auc)
 
-        # Calculate the detection rate on unmodified malware
-        results.append("%.8f" % y_mal_orig.mean())
+        results.append("%.8f" % predicted_value_original_malware.mean())
 
-        # Write the TxR and NxR information
-        tn, fp, fn, tp = confusion_matrix(y_actual, y_hat).ravel()
-        tpr, fpr = tp / (tp + fn), fp / (tn + fp)
-        for rate in [tpr, fpr]:
+        true_positive, false_positive, false_negative, true_positive = confusion_matrix(actual_labels, predicted_labels).ravel()
+        true_positive_ratio, false_positive_ratio = true_positive / (true_positive + false_negative), false_positive / (true_positive + false_positive)
+        for rate in [true_positive_ratio, false_positive_ratio]:
             results.append("%.8f" % rate)
         results = ",".join(results)
-        f_out.write(results)
+        out_file.write(results)
 
         return "".join([header, results])
