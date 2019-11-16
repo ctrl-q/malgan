@@ -4,10 +4,7 @@ import torch
 from torch import Tensor
 import torch.nn as neural_net
 
-
-# noinspection PyPep8Naming
 class Discriminator(neural_net.Module):
-    r""" MalGAN discriminator (substitute detector).  Simple feed forward network. """
     EPS = 1e-7
 
     def __init__(self, width_of_malware: int, hidden_layer_size: List[int], activation_fct: neural_net.Module):
