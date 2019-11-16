@@ -28,9 +28,13 @@ def setup_logger(is_in_quiet_mode: bool, log_level: int = logging.DEBUG,
             job_id = [job_id]
         fields += ["_j=", "-".join("%05d" % id for id in job_id)]
 
-    fields += ["_", str(datetime.now()).replace(" ", "-"), ".log"]
+    time = str(datetime.now()).replace(" ", "-")
+    time = time.split(".")[0].replace(":", "_")
+
+    fields += ["_", time, ".log"]
 
     filename = LOG_DIRECTORY / "".join(fields)
+
     logging.basicConfig(filename=filename, level=log_level, format=format_string, datefmt=date_format)
 
     if not is_in_quiet_mode:
