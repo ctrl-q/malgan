@@ -11,51 +11,43 @@ from torch import Tensor
 
 ListOrInt = Union[int, List[int]]
 
-LOG_DIR = Path(".")
-IS_CUDA = torch.cuda.is_available()
+LOG_DIRECTORY = Path(".")
+IS_CUDA_AVAILABLE = torch.cuda.is_available()
 
 
-def setup_logger(quiet_mode: bool, log_level: int = logging.DEBUG,
+def setup_logger(is_in_quiet_mode: bool, log_level: int = logging.DEBUG,
                  job_id: Optional[ListOrInt] = None) -> None:
-    r"""
-    Logger Configurator
+    date_format = '%m/%d/%Y %I:%M:%S %p'
+    format_string = '%(asctime)s -- %(levelname)s -- %(message)s'
 
-    Configures the test logger.
+    LOG_DIRECTORY.mkdir(parents=True, exist_ok=True)
 
-    :param quiet_mode: True if quiet mode (i.e., disable logging to stdout) is used
-    :param job_id: Identification number for the job
-    :param log_level: Level to log
-    """
-    date_format = '%m/%d/%Y %I:%M:%S %p'  # Example Time Format - 12/12/2010 11:46:36 AM
-    format_str = '%(asctime)s -- %(levelname)s -- %(message)s'
-
-    LOG_DIR.mkdir(parents=True, exist_ok=True)
-    flds = ["logs"]
+    fields = ["logs"]
     if job_id is not None:
         if isinstance(job_id, int):
             job_id = [job_id]
-        flds += ["_j=", "-".join("%05d" % x for x in job_id)]
-    flds += ["_", str(datetime.now()).replace(" ", "-"), ".log"]
+        fields += ["_j=", "-".join("%05d" % id for id in job_id)]
 
-    filename = LOG_DIR / "".join(flds)
-    logging.basicConfig(filename=filename, level=log_level, format=format_str, datefmt=date_format)
+    fields += ["_", str(datetime.now()).replace(" ", "-"), ".log"]
 
-    # Also print to stdout
-    if not quiet_mode:
+    filename = LOG_DIRECTORY / "".join(fields)
+    logging.basicConfig(filename=filename, level=log_level, format=format_string, datefmt=date_format)
+
+    if not is_in_quiet_mode:
         handler = logging.StreamHandler(sys.stdout)
         handler.setLevel(log_level)
-        formatter = logging.Formatter(format_str)
+        formatter = logging.Formatter(format_string)
         handler.setFormatter(formatter)
         logging.getLogger().addHandler(handler)
 
     logging.info("******************* New Run Beginning *****************")
-    logging.debug("CUDA: %s", "ENABLED" if IS_CUDA else "Disabled")
+    logging.debug("CUDA: %s", "ENABLED" if IS_CUDA_AVAILABLE else "Disabled")
     logging.info(" ".join(sys.argv))
 
 
 class TrainingLogger:
     r""" Helper class used for standardizing logging """
-    FIELD_SEP = " "
+    FIELD_SEPARATOR = " "
     DEFAULT_WIDTH = 12
     EPOCH_WIDTH = 5
 
@@ -63,64 +55,68 @@ class TrainingLogger:
 
     LOG = logging.info
 
-    def __init__(self, fld_names: List[str], fld_widths: Optional[List[int]] = None):
-        if fld_widths is None: fld_widths = len(fld_names) * [TrainingLogger.DEFAULT_WIDTH]
-        if len(fld_widths) != len(fld_names):
-            raise ValueError("Mismatch in the length of field names and widths")
+    def __init__(self, field_names: List[str], field_widths: Optional[List[int]] = None):
+        if field_widths is None:
+            field_widths = len(field_names) * [TrainingLogger.DEFAULT_WIDTH]
+        if len(field_widths) != len(field_names):
+            raise ValueError("Mismatch in the length of field names and widths.")
 
-        self._log = TrainingLogger.LOG  # Function used for logging
-        self._fld_widths = fld_widths
+        self._log = TrainingLogger.LOG
+        self._field_widths = field_widths
 
-        # Print the column headers
-        combined_names = ["Epoch"] + fld_names
-        combined_widths = [TrainingLogger.EPOCH_WIDTH] + fld_widths
-        fmt_str = TrainingLogger.FIELD_SEP.join(["{:^%d}" % _d for _d in combined_widths])
-        self._log(fmt_str.format(*combined_names))
-        # Line of separators under the headers (default value is hyphen)
-        sep_line = TrainingLogger.FIELD_SEP.join(["{:-^%d}" % _w for _w in combined_widths])
-        logging.info(sep_line.format(*(len(combined_widths) * [""])))
+        combined_names = ["Epoch"] + field_names
+        combined_widths = [TrainingLogger.EPOCH_WIDTH] + field_widths
+        format_string = TrainingLogger.FIELD_SEPARATOR.join(["{:^%d}" % width for width in combined_widths])
+        self._log(format_string.format(*combined_names))
+
+        separator_line = TrainingLogger.FIELD_SEPARATOR.join(["{:-^%d}" % width for width in combined_widths])
+        logging.info(separator_line.format(*(len(combined_widths) * [""])))
 
     @property
     def num_fields(self) -> int:
-        r""" Number of fields to log """
-        return len(self._fld_widths)
+        return len(self._field_widths)
 
     def log(self, epoch: int, values: List[Any]) -> None:
-        r""" Log the list of values """
         values = self._clean_values_list(values)
-        format_str = self._build_values_format_str(values)
-        self._log(format_str.format(epoch, *values))
+        format_string = self._build_values_format_str(values)
+        self._log(format_string.format(epoch, *values))
 
     def _build_values_format_str(self, values: List[Any]) -> str:
-        r""" Constructs a format string based on the values """
         def _get_fmt_str(_w: int, fmt: str) -> str:
             return "{:^%d%s}" % (_w, fmt)
 
-        frmt = [_get_fmt_str(self.EPOCH_WIDTH, "d")]
-        for width, v in zip(self._fld_widths, values):
-            if isinstance(v, str): fmt_str = "s"
-            elif isinstance(v, Decimal): fmt_str = ".3E"
-            elif isinstance(v, int): fmt_str = "d"
-            elif isinstance(v, float): fmt_str = ".4f"
-            else: raise ValueError("Unknown value type")
+        format_string = [_get_fmt_str(self.EPOCH_WIDTH, "d")]
+        for width, value in zip(self._field_widths, values):
+            if isinstance(value, str):
+                format_chars = "s"
+            elif isinstance(value, Decimal):
+                format_chars = ".3E"
+            elif isinstance(value, int):
+                format_chars = "d"
+            elif isinstance(value, float):
+                format_chars = ".4f"
+            else:
+                raise ValueError("Unknown value type")
 
-            frmt.append(_get_fmt_str(width, fmt_str))
-        return TrainingLogger.FIELD_SEP.join(frmt)
+            format_string.append(_get_fmt_str(width, format_chars))
+        return TrainingLogger.FIELD_SEPARATOR.join(format_string)
 
     def _clean_values_list(self, values: List[Any]) -> List[Any]:
-        r""" Modifies values in the \p values list to make them straightforward to log """
         values = copy.deepcopy(values)
-        # Populate any missing fields
+
         while len(values) < self.num_fields:
             values.append(TrainingLogger.DEFAULT_FIELD)
 
-        new_vals = []
-        for v in values:
-            if isinstance(v, bool): v = "+" if v else ""
-            elif v is None: v = "N/A"
-            elif isinstance(v, Tensor): v = v.item()
+        new_values = []
+        for value in values:
+            if isinstance(value, bool):
+                value = "+" if value else ""
+            elif value is None:
+                value = "N/A"
+            elif isinstance(value, Tensor):
+                value = value.item()
 
-            # Must be separate since v can be a float due to a Tensor
-            if isinstance(v, float) and (v <= 1E-3 or v >= 1E4): v = Decimal(v)
-            new_vals.append(v)
-        return new_vals
+            if isinstance(value, float) and (value <= 1E-3 or value >= 1E4):
+                value = Decimal(value)
+            new_values.append(value)
+        return new_values
