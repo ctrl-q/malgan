@@ -169,7 +169,7 @@ class MalGAN(nn.Module):
 
         self._bb = BlackBoxDetector(detector_type)
         self._gen = Generator(M=self.M, Z=self.Z, hidden_size=h_gen, g=self._g)
-        self._discrim = Discriminator(M=self.M, hidden_size=h_discrim, g=self._g)
+        self._discrim = Discriminator(width_of_malware=self.M, hidden_layer_size=h_discrim, activation_fct=self._g)
 
         def split_train_valid_test(dataset: Dataset, is_benign: bool):
             """Helper function to partition into test, train, and validation subsets"""
