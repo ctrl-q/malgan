@@ -1,12 +1,3 @@
-# -*- coding: utf-8 -*-
-r"""
-    Main module for testing and debugging the MalGAN implementation.
-
-    :version: 0.1.0
-    :copyright: (c) 2019 by Zayd Hammoudeh.
-    :license: MIT, see LICENSE for more details.
-"""
-
 import argparse
 import pickle
 import sys
@@ -14,11 +5,14 @@ from typing import Union
 from pathlib import Path
 
 import numpy as np
-from malgan import MalGAN, MalwareDataset, BlackBoxDetector, setup_logger
+from PyQt5.QtWidgets import QApplication
+
+from malgan import MalGAN, MalwareDataset, BlackBoxDetector, setup_logger, app
 
 import torch
 from torch import nn
 
+from malgan.app import AppWindow
 
 
 def parse_args() -> argparse.Namespace:
@@ -149,4 +143,9 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    main_fct = main
+
+    app = QApplication(sys.argv)
+    w = AppWindow(main_fct)
+    w.show()
+    sys.exit(app.exec_())
