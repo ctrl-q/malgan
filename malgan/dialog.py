@@ -3,7 +3,7 @@ import multiprocessing
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 
-class MyDialog(object):
+class malganDialog(object):
     def __init__(self, main_fct):
         self.main_fct = main_fct
         self.main_fct_process = multiprocessing.Process(target=self.main_fct)
