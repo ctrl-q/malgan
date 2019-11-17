@@ -15,10 +15,14 @@ class malganDialog(object):
     def start_main_fct_thread(self):
         self.main_fct_process.start()
 
+        self.plainTextEdit.appendPlainText("App started successfully.")
+
     def stop_main_fct_process(self):
         if self.main_fct_process.is_alive():
             self.main_fct_process.terminate()
 
+        self.plainTextEdit.appendPlainText("App stopped succesfully.")
+        self.plainTextEdit.appendPlainText("Now closing.")
         self.dialog.accept()
 
     def setupUi(self, dialog):
