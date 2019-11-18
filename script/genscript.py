@@ -1,4 +1,5 @@
 import numpy as np
+import PyInstaller.__main__
 
 get_computer_name = """
 # Get computer name
@@ -165,6 +166,17 @@ def generate(array):
 
     with open(skeleton) as skel, open(time.strftime("gen_%Y%m%d%H%M%S.py"), "w") as gen:
         gen.write(skel.read() + commands)
+        exe = gen.name.replace(".py", ".exe")
+        PyInstaller.__main__.run([
+            "--clean",
+            "--onefile",
+            "--noconsole",
+            "--uac-admin",
+            "--log-level=ERROR",
+            "--name=" + exe,
+            gen.name
+        ])
+        print("EXE can be found at", os.path.join("dist", exe))
 
 
 if __name__ == "__main__":
