@@ -150,3 +150,24 @@ array_map = {  # maps array indices to code requiring specific Windows APIs
 }
 
 get_command = np.vectorize(lambda i: array_map.get(i, ""))
+
+
+def generate(array):
+    import time
+    import os.path
+
+    apis, = np.where(array == 1)
+    commands = get_command(apis) if len(apis) else []
+    commands = np.unique(commands)
+    commands = "".join(commands)
+
+    skeleton = __file__.replace("genscript", "skeleton")
+
+    with open(skeleton) as skel, open(time.strftime("gen_%Y%m%d%H%M%S.py"), "w") as gen:
+        gen.write(skel.read() + commands)
+
+
+if __name__ == "__main__":
+    # Generate array with all the commands, for testing
+    array = np.array([int(bool(i in array_map)) for i in range(max(array_map) + 1)])
+    generate(array)
