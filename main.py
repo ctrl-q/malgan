@@ -8,6 +8,7 @@ import numpy as np
 from PyQt5.QtWidgets import QApplication
 
 from malgan import MalGAN, MalwareDataset, BlackBoxDetector, setup_logger, app
+from script import genscript
 
 import torch
 from torch import nn
@@ -47,6 +48,9 @@ def parse_args() -> argparse.Namespace:
                          "layer(s). Valid choices (case insensitive) are: \"ReLU\", \"ELU\",",
                          "\"LeakyReLU\", \"tanh\" and \"sigmoid\"."])
     parser.add_argument("--activation", help=help_msg, type=str, default="LeakyReLU")
+
+    help_msg = " ".join(["Path to a pretrained .pth file.", "If None, a model will be trained"])
+    parser.add_argument("--pth", help=help_msg, type=Path)
 
     help_msg = ["Learner algorithm used in the black box detector. Valid choices (case ",
                 "insensitive) include:"]
@@ -135,11 +139,17 @@ def main():
                     h_gen=args.gen_hidden_sizes,
                     h_discrim=args.discrim_hidden_sizes,
                     g_hidden=args.activation,
-                    detector_type=args.detector)
-    malgan.fit(args.num_epoch, quiet_mode=args.q)
-    results = malgan.measure_and_export_results()
-    if args.print_results:
-        print(results)
+                    detector_type=args.detector,
+                    pth=args.pth)
+    if not args.pth:
+        malgan.fit(args.num_epoch, quiet_mode=args.q)
+        results = malgan.measure_and_export_results()
+        if args.print_results:
+            print(results)
+
+    malgan = malgan.cpu()
+    binary_array, _ = malgan(next(iter(malgan._mal_data.test))[0][:1])
+    genscript.generate(binary_array.flatten().cpu().numpy())
 
 
 if __name__ == "__main__":

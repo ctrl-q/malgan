@@ -23,7 +23,7 @@ class Generator(neural_net.Module):
     def forward(self, input_vect: torch.Tensor, noise_vect: torch.Tensor = None) -> TensorTuple:
         if noise_vect is None:
             num_ele = input_vect.shape[0]
-            noise_vect = torch.rand((num_ele, self._Z))
+            noise_vect = torch.rand((num_ele, self._Z)).to(input_vect.device)
 
         concat = torch.cat((input_vect, noise_vect), dim=1)
         concat = self._layers.forward(concat)

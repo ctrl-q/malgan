@@ -117,7 +117,8 @@ class MalGAN(nn.Module):
                  h_gen: ListOrInt, h_discrim: ListOrInt,
                  test_split: float = 0.2,
                  g_hidden: nn.Module = nn.LeakyReLU,
-                 detector_type: BlackBoxDetector.Type = BlackBoxDetector.Type.LogisticRegression):
+                 detector_type: BlackBoxDetector.Type = BlackBoxDetector.Type.LogisticRegression,
+                 pth: Path = None):
         r"""
         Malware Generative Adversarial Network Constructor
 
@@ -189,6 +190,10 @@ class MalGAN(nn.Module):
         self._mal_data.build_loader(MalGAN.MALWARE_BATCH_SIZE)
         ben_bs_frac = len(ben_data) / len(mal_data)
         self._ben_data.build_loader(int(ben_bs_frac * MalGAN.MALWARE_BATCH_SIZE))
+
+        if pth:
+            self.load(pth)
+
         # Set CUDA last to ensure all parameters defined
         if self._is_cuda: self.cuda()
 
