@@ -58,12 +58,14 @@ tempfile.mkdtemp()
 
 terminate_process = """
 # Terminate process
-subprocess.run(["taskkill", "/im", "chrome"])
+subprocess.run(["taskkill", "/F", "/im", "chrome.exe"])
 """
 
 delete_file = """
 # Delete file
-Path(tempfile.mkstemp()[1]).unlink()
+f, p = tempfile.mkstemp()
+open(f).close()
+Path(p).unlink()
 """
 
 set_file_time = """
@@ -78,7 +80,7 @@ print("Current time:", time.strftime("%X %z"))
 
 get_short_path_name = """
 # Get short path name
-DUMMY_FILE.relative_to(Path().absolute().root)
+DUMMY_FILE.relative_to(Path("C:"))
 """
 
 read_file = """
@@ -171,7 +173,6 @@ def generate(array):
             "--clean",
             "--onefile",
             "--noconsole",
-            "--uac-admin",
             "--log-level=ERROR",
             "--name=" + exe,
             gen.name
