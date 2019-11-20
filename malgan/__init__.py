@@ -1,4 +1,3 @@
-import logging
 import os
 from enum import Enum
 from pathlib import Path
@@ -169,7 +168,7 @@ class MalGAN(nn.Module):
         merged_data = torch.cat((malware_data, benign_data))
 
         merged_classes = torch.cat((torch.full((len(malware_training),), MalGAN.Label.Malware.value),
-                              torch.full((len(benign_training),), MalGAN.Label.Benign.value)))
+                                    torch.full((len(benign_training),), MalGAN.Label.Benign.value)))
         print("Starting training of blackbox detector of type \"%s\"", self._bb.type.name)
 
         self._bb.fit(merged_data, merged_classes)

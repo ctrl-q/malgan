@@ -15,14 +15,8 @@ from torch import Tensor
 TorchOrNumpy = Union[np.ndarray, Tensor]
 
 
-# noinspection PyPep8Naming
 class BlackBoxDetector:
-    r"""
-    Black box detector that intends to mimic an antivirus/anti-Malware program that detects whether
-    a specific program is either malware or benign.
-    """
     class Type(Enum):
-        r""" Learner algorithm to be used by the black-box detector """
         DecisionTree = DecisionTreeClassifier()
         LogisticRegression = LogisticRegression(solver='lbfgs', max_iter=int(1e6))
         MultiLayerPerceptron = MLPClassifier()
@@ -31,17 +25,10 @@ class BlackBoxDetector:
 
         @classmethod
         def names(cls):
-            r""" Builds the list of all enum names """
             return [c.name for c in cls]
 
         @classmethod
-        def get_from_name(cls, name):
-            r"""
-            Gets the enum item from the specified name
-
-            :param name: Name of the enum object
-            :return: Enum item associated with the specified name
-            """
+        def get_classifier_from_name(cls, name):
             for c in BlackBoxDetector.Type:
                 if c.name == name:
                     return c
@@ -49,37 +36,29 @@ class BlackBoxDetector:
 
     def __init__(self, learner_type: 'BlackBoxDetector.Type'):
         self.type = learner_type
-        # noinspection PyCallingNonCallable
         self._model = sklearn.clone(self.type.value)
         self.training = True
 
-    def fit(self, X: TorchOrNumpy, y: TorchOrNumpy):
-        r"""
-        Fits the learner.  Supports NumPy and PyTorch arrays as input.  Returns a torch tensor
-        as output.
+    def fit(self, train_data: TorchOrNumpy, train_labels: TorchOrNumpy):
+        if isinstance(train_data, Tensor):
+            train_data = train_data.cpu().numpy()
 
-        :param X: Examples upon which to train
-        :param y: Labels for the examples
-        """
-        if isinstance(X, Tensor):
-            X = X.cpu().numpy()
-        if isinstance(y, Tensor):
-            y = y.cpu().numpy()
-        self._model.fit(X, y)
+        if isinstance(train_labels, Tensor):
+            train_labels = train_labels.cpu().numpy()
+
+        self._model.fit(train_data, train_labels)
         self.training = False
 
-    def predict(self, X: TorchOrNumpy) -> Tensor:
-        r"""
-        Predict the labels for \p X
-
-        :param X: Set of examples for which label probabilities should be predicted
-        :return: Predicted value for \p X
-        """
+    def predict(self, test_data: TorchOrNumpy) -> Tensor:
         if self.training:
             raise ValueError("Detector does not appear to be trained but trying to predict")
+
         if torch.cuda.is_available():
-            X = X.cpu()
-        if isinstance(X, Tensor):
-            X = X.numpy()
-        y = torch.from_numpy(self._model.predict(X)).float()
-        return y.cuda() if torch.cuda.is_available() else y
+            test_data = test_data.cpu()
+
+        if isinstance(test_data, Tensor):
+            test_data = test_data.numpy()
+
+        predictions = torch.from_numpy(self._model.predict(test_data)).float()
+
+        return predictions.cuda() if torch.cuda.is_available() else predictions
