@@ -1,17 +1,3 @@
-# -*- coding: utf-8 -*-
-r"""
-    malgan.detector
-    ~~~~~~~~~~~~
-
-    Black box malware detector.
-
-    Based on the paper: "Generating Adversarial Malware Examples for Black-Box Attacks Based on GAN"
-    By Weiwei Hu and Ying Tan.
-
-    :version: 0.1.0
-    :copyright: (c) 2019 by Zayd Hammoudeh.
-    :license: MIT, see LICENSE for more details.
-"""
 from enum import Enum
 from typing import Union
 

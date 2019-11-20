@@ -122,7 +122,7 @@ def load_dataset(file_path: Union[str, Path], y: int) -> MalwareDataset:
             data = pickle.load(f_in)
     else:
         raise ValueError("Unknown file extension.  Cannot determine how to import")
-    return MalwareDataset(x=data, y=y)
+    return MalwareDataset(data=data, classes=y)
 
 
 def main(list_of_apis_to_use=None):
@@ -135,14 +135,14 @@ def main(list_of_apis_to_use=None):
 
     malgan = MalGAN(load_dataset(args.mal_file, MalGAN.Label.Malware.value),
                     load_dataset(args.ben_file, MalGAN.Label.Benign.value),
-                    Z=args.Z,
-                    h_gen=args.gen_hidden_sizes,
-                    h_discrim=args.discrim_hidden_sizes,
-                    g_hidden=args.activation,
+                    dim_noise_vect=args.Z,
+                    hidden_layer_width_generator=args.gen_hidden_sizes,
+                    hidden_layer_width_discriminator=args.discrim_hidden_sizes,
+                    generator_hidden=args.activation,
                     detector_type=args.detector,
-                    pth=args.pth)
+                    path=args.pth)
     if not args.pth:
-        malgan.fit(args.num_epoch, quiet_mode=args.q)
+        malgan.fit(args.num_epoch)
 
     malgan = malgan.cpu()
 
@@ -155,7 +155,9 @@ def main(list_of_apis_to_use=None):
         if index < 128:
             array[index] = 1
 
-    genscript.generate(array)
+    print("Done")
+
+    #genscript.generate(array)
 
 
 if __name__ == "__main__":
