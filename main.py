@@ -10,7 +10,6 @@ from torch import nn
 
 from malgan import MalGAN, MalwareDataset, BlackBoxDetector, setup_logger
 from malgan.app import AppWindow
-from malgan.dialog import api_map_to_func
 from script import genscript
 from script.genscript import *
 
