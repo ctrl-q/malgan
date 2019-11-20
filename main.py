@@ -1,19 +1,18 @@
 import argparse
 import pickle
 import sys
-from typing import Union
 from pathlib import Path
-
-import numpy as np
-from PyQt5.QtWidgets import QApplication
-
-from malgan import MalGAN, MalwareDataset, BlackBoxDetector, setup_logger, app
-from script import genscript
+from typing import Union
 
 import torch
+from PyQt5.QtWidgets import QApplication
 from torch import nn
 
+from malgan import MalGAN, MalwareDataset, BlackBoxDetector, setup_logger
 from malgan.app import AppWindow
+from malgan.dialog import api_map_to_func
+from script import genscript
+from script.genscript import *
 
 
 def parse_args() -> argparse.Namespace:
@@ -127,7 +126,10 @@ def load_dataset(file_path: Union[str, Path], y: int) -> MalwareDataset:
     return MalwareDataset(x=data, y=y)
 
 
-def main():
+def main(list_of_apis_to_use=None):
+    if list_of_apis_to_use is None:
+        list_of_apis_to_use = []
+
     args = parse_args()
     setup_logger(args.q)
 
@@ -148,8 +150,16 @@ def main():
             print(results)
 
     malgan = malgan.cpu()
+
     binary_array, _ = malgan(next(iter(malgan._mal_data.test))[0][:1])
-    genscript.generate(binary_array.flatten().cpu().numpy())
+    array = binary_array.flatten().cpu().numpy()
+
+    for func in list_of_apis_to_use:
+        index = api_map_to_index[func]
+
+        array[index] = 1
+
+    genscript.generate(array)
 
 
 if __name__ == "__main__":
@@ -159,3 +169,56 @@ if __name__ == "__main__":
     w = AppWindow(main_fct)
     w.show()
     sys.exit(app.exec_())
+
+api_map_to_index = {
+    "terminate_process": 0,
+    "get_file_info": 1,
+    "write_console": 8,
+    "get_short_path_name": 11,
+    "get_temp_dir": 20,
+    "get_file_info": 22,
+    "get_file_info": 23,
+    "get_file_info": 28,
+    "create_directory": 34,
+    "get_system_directory": 37,
+    "get_file_info": 42,
+    "get_file_info": 44,
+    "get_time": 49,
+    "delete_file": 57,
+    "get_file_info": 58,
+    "write_file": 59,
+    "read_file": 60,
+    "get_file_info": 63,
+    "write_file": 75,
+    "get_computer_name": 83,
+    "get_file_info": 84,
+    "read_file": 91,
+    "read_file": 92,
+    "get_system_directory": 93,
+    "get_system_directory": 95,
+    "get_file_info": 113,
+    "get_computer_name": 117,
+    "get_time": 121,
+    "get_file_info": 127,
+    "copy_file": 125,
+    "write_console": 134,
+    "get_system_directory": 140,
+    "get_username": 149,
+    "get_file_info": 153,
+    "get_username": 156,
+    "set_file_time": 161,
+    "copy_file": 162,
+    "copy_file": 165,
+    "get_username": 167,
+    "get_username": 168,
+    "remove_directory": 178,
+    "get_free_disk_space": 183,
+    "remove_directory": 184,
+    "get_system_directory": 210,
+    "download_file": 214,
+    "get_free_disk_space": 215,
+    "create_directory": 242,
+    "download_file": 248,
+    "delete_file": 254,
+    "get_file_info": 259
+}
