@@ -40,6 +40,9 @@ class MalwareDataset(Dataset):
     def __getitem__(self, index):
         return self.x[index], self.y
 
+    def __setitem__(self, index):
+        self.x[index] = self.x[index]
+
     def __len__(self):
         return self.x.shape[0]
 
@@ -61,6 +64,19 @@ class _DataGroup:
             self.valid = DataLoader(self.valid, batch_size=train_batch_size)
         self.test = DataLoader(self.test, batch_size=train_batch_size)
         self.is_loaders = True
+
+
+def generate_random_seed() -> list:
+    from random import seed
+    from random import random
+    seed(1)
+
+    values = []
+    for _ in range(10):
+        value = random()
+        values.append(value)
+
+    return values
 
 
 class MalGAN(nn.Module):
