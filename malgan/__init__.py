@@ -1,36 +1,19 @@
-# -*- coding: utf-8 -*-
-r"""
-    malgan.__init__
-    ~~~~~~~~~~~~~~~
-
-    MalGAN complete architecture.
-
-    Based on the paper: "Generating Adversarial Malware Examples for Black-Box Attacks Based on GAN"
-    By Weiwei Hu and Ying Tan.
-
-    :version: 0.1.0
-    :copyright: (c) 2019 by Zayd Hammoudeh.
-    :license: MIT, see LICENSE for more details.
-"""
 import logging
 import os
 from enum import Enum
-from typing import List, Tuple, Union
 from pathlib import Path
+from typing import List, Tuple, Union
 
 import numpy as np
-
 import tensorboardX
 import torch
-from torch import Tensor
 import torch.nn as nn
 import torch.optim as optim
-from torch.optim.optimizer import Optimizer
 import torch.utils.data
+from torch import Tensor
+from torch.optim.optimizer import Optimizer
 from torch.utils.data import Dataset, DataLoader, Subset
 
-from ._export_results import _export_results
-from ._log_tools import setup_logger, TrainingLogger
 from .detector import BlackBoxDetector
 from .discriminator import Discriminator
 from .generator import Generator
@@ -39,11 +22,10 @@ ListOrInt = Union[List[int], int]
 PathOrStr = Union[str, Path]
 TensorTuple = Tuple[Tensor, Tensor]
 
-
 IS_CUDA = torch.cuda.is_available()
 if IS_CUDA:
     device = torch.device('cuda:0')
-    # noinspection PyUnresolvedReferences
+
     torch.set_default_tensor_type(torch.cuda.FloatTensor)
 
 
@@ -51,6 +33,7 @@ class MalwareDataset(Dataset):
     r"""
     Encapsulates a malware dataset.  All elements in the dataset will be either malware or benign
     """
+
     def __init__(self, x: Union[np.ndarray, Tensor], y):
         super().__init__()
 
@@ -76,6 +59,7 @@ class _DataGroup:  # pylint: disable=too-few-public-methods
     Encapsulates either PyTorch DataLoaders or Datasets.  This class is intended only for internal
     use by MalGAN.
     """
+
     def __init__(self, train: MalwareDataset, valid: MalwareDataset, test: MalwareDataset):
         self.train = train
         self.valid = valid
@@ -214,6 +198,7 @@ class MalGAN(nn.Module):
         :param mal_train: Malware training dataset
         :param ben_train: Benign training dataset
         """
+
         def extract_x(ds: Subset) -> Tensor:
             # noinspection PyUnresolvedReferences
             x = ds.dataset.x[ds.indices]
@@ -245,10 +230,6 @@ class MalGAN(nn.Module):
         d_optimizer = optim.Adam(self._discrim.parameters(), lr=1e-5)
         g_optimizer = optim.Adam(self._gen.parameters(), lr=1e-4)
 
-        if not quiet_mode:
-            names = ["Gen Train Loss", "Gen Valid Loss", "Discrim Train Loss", "Best?"]
-            log = TrainingLogger(names, [20, 20, 20, 7])
-
         best_epoch, best_loss = None, np.inf
         for epoch_cnt in range(1, cyc_len + 1):
             train_l_g, train_l_d = self._fit_epoch(g_optimizer, d_optimizer)
@@ -262,7 +243,6 @@ class MalGAN(nn.Module):
             if flds[-1]:
                 self._save(self._build_export_name(is_final=False))
                 best_loss = valid_l_g
-            if not quiet_mode: log.log(epoch_cnt, flds)
         MalGAN.tensorboard.close()
 
         self.load(self._build_export_name(is_final=False))
@@ -286,7 +266,7 @@ class MalGAN(nn.Module):
         # Either add an epoch name or
         return MalGAN.SAVED_MODEL_DIR / "".join(["_".join(name).lower(), ".pth"])
 
-    def _delete_old_backup(self,  is_final: bool = True) -> None:
+    def _delete_old_backup(self, is_final: bool = True) -> None:
         r"""
         Helper function to delete old backed up models
 
@@ -361,57 +341,6 @@ class MalGAN(nn.Module):
         y_hat = self._bb.predict(X)
         d = torch.where(y_hat == MalGAN.Label.Malware.value, d_theta, 1 - d_theta)
         return -d.log().mean()
-
-    def measure_and_export_results(self) -> str:
-        r"""
-        Measure the test accuracy and provide results information
-
-        :return: Results information as a comma separated string
-        """
-        # noinspection PyTypeChecker
-        valid_loss = self._meas_loader_gen_loss(self._mal_data.valid)
-        # noinspection PyTypeChecker
-        test_loss = self._meas_loader_gen_loss(self._mal_data.test)
-        logging.debug("Final Validation Loss: %.6f", valid_loss)
-        logging.debug("Final Test Loss: %.6f", test_loss)
-
-        num_mal_test = 0
-        y_mal_orig, m_prime_arr, bits_changed = [], [], []
-        for m, _ in self._mal_data.test:
-            y_mal_orig.append(self._bb.predict(m.cpu()))
-            if self._is_cuda:
-                m = m.cuda()
-            num_mal_test += m.shape[0]
-
-            m_prime, _ = self._gen.forward(m)
-            m_prime_arr.append(m_prime.cpu() if self._is_cuda else m_prime)
-
-            m_diff = m_prime - m
-            bits_changed.append(torch.sum(m_diff.cpu(), dim=1))
-
-            # Sanity check no bits flipped 1 -> 0
-            msg = "Malware signature changed to 0 which is not allowed"
-            assert torch.sum(m_diff < -0.1) == 0, msg
-        avg_changed_bits = torch.cat(bits_changed).mean()
-        logging.debug("Avg. Malware Bits Changed Changed: %2f", avg_changed_bits)
-
-        # BB prediction of the malware before the generator
-        y_mal_orig = torch.cat(y_mal_orig)
-
-        # Build an X tensor for prediction using the detector
-        ben_test_arr = [x.cpu() if self._is_cuda else x for x, _ in self._ben_data.test]
-        x = torch.cat(m_prime_arr + ben_test_arr)
-        y_actual = torch.cat((torch.full((num_mal_test,), MalGAN.Label.Malware.value),
-                             torch.full((len(x) - num_mal_test,), MalGAN.Label.Benign.value)))
-
-        y_hat_post = self._bb.predict(x)
-        if self._is_cuda:
-            y_mal_orig, y_hat_post, y_actual = y_mal_orig.cpu(), y_hat_post.cpu(), y_actual.cpu()
-        # noinspection PyProtectedMember
-        y_prob = self._bb._model.predict_proba(x)  # pylint: disable=protected-access
-        y_prob = y_prob[:, MalGAN.Label.Malware.value]
-        return _export_results(self, valid_loss, test_loss, avg_changed_bits, y_actual,
-                               y_mal_orig, y_prob, y_hat_post)
 
     def _save(self, file_path: PathOrStr) -> None:
         r"""

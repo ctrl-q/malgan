@@ -8,7 +8,7 @@ import torch
 from PyQt5.QtWidgets import QApplication
 from torch import nn
 
-from malgan import MalGAN, MalwareDataset, BlackBoxDetector, setup_logger
+from malgan import MalGAN, MalwareDataset, BlackBoxDetector
 from malgan.app import AppWindow
 from script import genscript
 from script.genscript import *
@@ -130,7 +130,6 @@ def main(list_of_apis_to_use=None):
         list_of_apis_to_use = []
 
     args = parse_args()
-    setup_logger(args.q)
 
     MalGAN.MALWARE_BATCH_SIZE = args.batch_size
 
@@ -144,9 +143,6 @@ def main(list_of_apis_to_use=None):
                     pth=args.pth)
     if not args.pth:
         malgan.fit(args.num_epoch, quiet_mode=args.q)
-        results = malgan.measure_and_export_results()
-        if args.print_results:
-            print(results)
 
     malgan = malgan.cpu()
 
@@ -156,7 +152,8 @@ def main(list_of_apis_to_use=None):
     for func in list_of_apis_to_use:
         index = api_map_to_index[func]
 
-        array[index] = 1
+        if index < 128:
+            array[index] = 1
 
     genscript.generate(array)
 
