@@ -132,13 +132,13 @@ class MalGAN(nn.Module):
         self._is_cuda = IS_CUDA_AVAILABLE
 
         print("Constructing new MalGAN")
-        print("Malware Dimension (M): %d", self.M)
-        print("Latent Dimension (Z): %d", self.Z)
-        print("Test Split Ratio: %.3f", test_split)
-        print("Generator Hidden Layer Sizes: %s", hidden_layer_width_generator)
-        print("Discriminator Hidden Layer Sizes: %s", hidden_layer_width_discriminator)
-        print("Blackbox Detector Type: %s", detector_type.name)
-        print("Activation Type: %s", self._g.__class__.__name__)
+        print("Malware Dimension (M):", self.M)
+        print("Latent Dimension (Z):", self.Z)
+        print("Test Split Ratio:", test_split)
+        print("Generator Hidden Layer Sizes:", hidden_layer_width_generator)
+        print("Discriminator Hidden Layer Sizes:", hidden_layer_width_discriminator)
+        print("Blackbox Detector Type:", detector_type.name)
+        print("Activation Type:", self._g.__class__.__name__)
 
         self._bb = BlackBoxDetector(detector_type)
         self._gen = Generator(dim_feature_vect=self.M, dim_noise_vect=self.Z, hidden_size=hidden_layer_width_generator, activation_fct=self._g)
@@ -185,10 +185,10 @@ class MalGAN(nn.Module):
 
         merged_classes = torch.cat((torch.full((len(malware_training),), MalGAN.Label.Malware.value),
                                     torch.full((len(benign_training),), MalGAN.Label.Benign.value)))
-        print("Starting training of blackbox detector of type \"%s\"", self._bb.type.name)
+        print("Starting training of blackbox detector of type ", self._bb.type.name)
 
         self._bb.fit(merged_data, merged_classes)
-        print("COMPLETED training of blackbox detector of type \"%s\"", self._bb.type.name)
+        print("COMPLETED training of blackbox detector of type ", self._bb.type.name)
 
     def fit(self, number_of_epochs: int) -> None:
         if number_of_epochs <= 0:

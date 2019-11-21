@@ -2,7 +2,13 @@ import multiprocessing
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-from script.genscript import *
+api_func_in_string = ['copy_file', 'create_directory', 'delete_file', 'download_file',
+                      'get_computer_name', 'get_file_info', 'get_free_disk_space',
+                      'get_short_path_name', 'get_system_directory', 'get_temp_dir', 'get_time',
+                      'get_username', 'read_file', 'remove_directory', 'set_file_time',
+                      'terminate_process', 'write_console', 'write_file']
+
+api_func_in_string.sort()
 
 
 class malganDialog(object):
@@ -104,9 +110,8 @@ class malganDialog(object):
 
         self.comboBox.setFont(font)
         self.comboBox.setCurrentText("")
-        list_of_apis = api_map_to_func.keys()
         self.comboBox.clear()
-        self.comboBox.addItems(list_of_apis)
+        self.comboBox.addItems(api_func_in_string)
         self.comboBox.setObjectName("select_box")
 
         self.button_add_to_api_list = QtWidgets.QPushButton(dialog)
@@ -141,57 +146,3 @@ class malganDialog(object):
         self.button_add_to_api_list.setText(_translate("Dialog", "Add to API list."))
         self.label_list_of_apis.setText(_translate("Dialog", "List of apis."))
         self.label_chosen_apis.setText(_translate("Dialog", "Chosen apis."))
-
-
-api_map_to_func = {
-    "terminate_process": terminate_process,
-    "get_file_info": get_file_info,
-    "write_console": write_console,
-    "get_short_path_name": get_short_path_name,
-    "get_temp_dir": get_temp_dir,
-    "get_file_info": get_file_info,
-    "get_file_info": get_file_info,
-    "get_file_info": get_file_info,
-    "create_directory": create_directory,
-    "get_system_directory": get_system_directory,
-    "get_file_info": get_file_info,
-    "get_file_info": get_file_info,
-    "get_time": get_time,
-    "delete_file": delete_file,
-    "get_file_info": get_file_info,
-    "write_file": write_file,
-    "read_file": read_file,
-    "get_file_info": get_file_info,
-    "write_file": write_file,
-    "get_computer_name": get_computer_name,
-    "get_file_info": get_file_info,
-    "read_file": read_file,
-    "read_file": read_file,
-    "get_system_directory": get_system_directory,
-    "get_system_directory": get_system_directory,
-    "get_file_info": get_file_info,
-    "get_computer_name": get_computer_name,
-    "get_time": get_time,
-    "get_file_info": get_file_info,
-    "copy_file": copy_file,
-    "write_console": write_console,
-    "get_system_directory": get_system_directory,
-    "get_username": get_username,
-    "get_file_info": get_file_info,
-    "get_username": get_username,
-    "set_file_time": set_file_time,
-    "copy_file": copy_file,
-    "copy_file": copy_file,
-    "get_username": get_username,
-    "get_username": get_username,
-    "remove_directory": remove_directory,
-    "get_free_disk_space": get_free_disk_space,
-    "remove_directory": remove_directory,
-    "get_system_directory": get_system_directory,
-    "download_file": download_file,
-    "get_free_disk_space": get_free_disk_space,
-    "create_directory": create_directory,
-    "download_file": download_file,
-    "delete_file": delete_file,
-    "get_file_info": get_file_info
-}

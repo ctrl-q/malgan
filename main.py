@@ -25,8 +25,6 @@ def parse_args() -> argparse.Namespace:
     for mode in ["malware", "benign"]:
         parser.add_argument(mode[:3] + "_file", help=message % mode, type=str, default="data/%s.npy" % mode)
 
-    parser.add_argument("-q", help="Quiet mode", action='store_true', default=False)
-
     help_message = " ".join(["Dimension of the hidden layer(s) in the GENERATOR."
                              "Multiple layers should be space separated"])
 
@@ -64,9 +62,6 @@ def parse_args() -> argparse.Namespace:
     help_message.append(".")
     parser.add_argument("--detector", help="".join(help_message), type=str,
                         default=BlackBoxDetector.Type.RandomForest.name)
-
-    help_message = "Print the results to the console. Intended for slurm results analysis"
-    parser.add_argument("--print-results", help=help_message, action="store_true", default=False)
 
     args = parser.parse_args()
     args.activation = _configure_activation_function(args.activation)
