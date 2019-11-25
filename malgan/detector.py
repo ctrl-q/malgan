@@ -3,13 +3,12 @@ from typing import Union
 
 import numpy as np
 import sklearn
-from sklearn.tree import DecisionTreeClassifier
+import torch
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.neural_network import MLPClassifier
 from sklearn.svm import SVC
-
-import torch
+from sklearn.tree import DecisionTreeClassifier
 from torch import Tensor
 
 TorchOrNumpy = Union[np.ndarray, Tensor]

@@ -23,7 +23,10 @@ class malganDialog(object):
     def start_main_fct_thread(self):
         if self.main_fct_process.is_alive():
             self.main_fct_process.terminate()
+
         try:
+            self.final_list_of_apis = self.getListOfApis()
+
             z = int(self.z_textbox.text())
             batch_size = int(self.batch_size_textbox.text())
             num_epochs = int(self.num_epochs_textbox.text())
@@ -35,6 +38,7 @@ class malganDialog(object):
             self.main_fct_process.start()
 
             self.consoleListWidget.addItem("App started successfully.")
+
         except:
             self.consoleListWidget.addItem("Invalid parameters.")
 
@@ -58,8 +62,6 @@ class malganDialog(object):
         else:
             self.listWidget.addItem(selected_api)
 
-        self.updateStartButton()
-
     def clear_apis_list(self):
         self.listWidget.clear()
 
@@ -72,28 +74,6 @@ class malganDialog(object):
             list.append(elem)
 
         return list
-
-    def updateStartButton(self):
-        self.final_list_of_apis = self.getListOfApis()
-
-        try:
-            z = int(self.z_textbox.text())
-            batch_size = int(self.batch_size_textbox.text())
-            num_epochs = int(self.num_epochs_textbox.text())
-            hidden_size_gen = int(self.hidden_size_gen_textbox.text())
-            hidden_size_dis = int(self.hidden_size_dis_textbox.text())
-
-            self.main_fct_process = multiprocessing.Process(target=self.main_fct, args=(z, batch_size, num_epochs, hidden_size_gen, hidden_size_dis, self.final_list_of_apis))
-
-            self.rewriteStartButton()
-        except:
-            self.consoleListWidget.addItem("Invalid parameters.")
-
-    def rewriteStartButton(self):
-        self.button_start = QtWidgets.QPushButton(self.dialog)
-        self.button_start.clicked.connect(self.start_main_fct_thread)
-        self.button_start.setGeometry(QtCore.QRect(460, 400, 100, 25))
-        self.button_start.setObjectName("start")
 
     def setupUi(self, dialog):
         self.dialog = dialog
