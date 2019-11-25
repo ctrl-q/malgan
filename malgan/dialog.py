@@ -1,6 +1,7 @@
 import multiprocessing
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtWidgets import QLineEdit
 
 api_func_in_string = ['copy_file', 'create_directory', 'delete_file', 'download_file',
                       'get_computer_name', 'get_file_info', 'get_free_disk_space',
@@ -88,6 +89,10 @@ class malganDialog(object):
         self.consoleListWidget.setGeometry(QtCore.QRect(20, 380, 400, 100))
         self.consoleListWidget.setObjectName("console")
 
+        self.console_label = QtWidgets.QLabel(dialog)
+        self.console_label.setGeometry(QtCore.QRect(20, 313, 400, 100))
+        self.console_label.setObjectName("console_label")
+
         self.button_start = QtWidgets.QPushButton(self.dialog)
         self.button_start.clicked.connect(self.start_main_fct_thread)
         self.button_start.setGeometry(QtCore.QRect(460, 400, 100, 25))
@@ -99,8 +104,43 @@ class malganDialog(object):
         self.button_stop.setObjectName("stop")
 
         self.listWidget = QtWidgets.QListWidget(dialog)
-        self.listWidget.setGeometry(QtCore.QRect(20, 40, 561, 192))
+        self.listWidget.setGeometry(QtCore.QRect(20, 40, 400, 192))
         self.listWidget.setObjectName("list_apis")
+
+        self.z_label = QtWidgets.QLabel(dialog)
+        self.z_label.setGeometry(QtCore.QRect(460, 36, 91, 15))
+        self.z_label.setObjectName("z_label")
+        self.z_textbox = QLineEdit(dialog)
+        self.z_textbox.setGeometry(QtCore.QRect(460, 51, 91, 20))
+        self.z_textbox.setObjectName("z_textbox")
+
+        self.batch_size_label = QtWidgets.QLabel(dialog)
+        self.batch_size_label.setGeometry(QtCore.QRect(460, 75, 130, 15))
+        self.batch_size_label.setObjectName("batch_size_label")
+        self.batch_size_textbox = QLineEdit(dialog)
+        self.batch_size_textbox.setGeometry(QtCore.QRect(460, 90, 91, 20))
+        self.batch_size_textbox.setObjectName("batch_size_textbox")
+
+        self.num_epochs_label = QtWidgets.QLabel(dialog)
+        self.num_epochs_label.setGeometry(QtCore.QRect(460, 114, 130, 15))
+        self.num_epochs_label.setObjectName("num_epochs_label")
+        self.num_epochs_textbox = QLineEdit(dialog)
+        self.num_epochs_textbox.setGeometry(QtCore.QRect(460, 129, 91, 20))
+        self.num_epochs_textbox.setObjectName("num_epochs_textbox")
+
+        self.hidden_size_gen_label = QtWidgets.QLabel(dialog)
+        self.hidden_size_gen_label.setGeometry(QtCore.QRect(460, 153, 130, 15))
+        self.hidden_size_gen_label.setObjectName("hidden_size_gen_label")
+        self.hidden_size_gen_textbox = QLineEdit(dialog)
+        self.hidden_size_gen_textbox.setGeometry(QtCore.QRect(460, 168, 91, 20))
+        self.hidden_size_gen_textbox.setObjectName("hidden_size_gen_textbox")
+
+        self.hidden_size_dis_label = QtWidgets.QLabel(dialog)
+        self.hidden_size_dis_label.setGeometry(QtCore.QRect(460, 192, 130, 15))
+        self.hidden_size_dis_label.setObjectName("hidden_size_dis_label")
+        self.hidden_size_dis_textbox = QLineEdit(dialog)
+        self.hidden_size_dis_textbox.setGeometry(QtCore.QRect(460, 207, 91, 20))
+        self.hidden_size_dis_textbox.setObjectName("hidden_size_dis_textbox")
 
         self.comboBox = QtWidgets.QComboBox(dialog)
         self.comboBox.setGeometry(QtCore.QRect(20, 270, 400, 25))
@@ -120,16 +160,16 @@ class malganDialog(object):
         self.button_add_to_api_list.clicked.connect(self.add_to_apis_list)
 
         self.label_list_of_apis = QtWidgets.QLabel(dialog)
-        self.label_list_of_apis.setGeometry(QtCore.QRect(20, 250, 61, 16))
-        self.label_list_of_apis.setObjectName("label")
+        self.label_list_of_apis.setGeometry(QtCore.QRect(20, 245, 61, 16))
+        self.label_list_of_apis.setObjectName("list_of_apis")
 
         self.label_chosen_apis = QtWidgets.QLabel(dialog)
-        self.label_chosen_apis.setGeometry(QtCore.QRect(20, 20, 61, 16))
-        self.label_chosen_apis.setObjectName("label_2")
+        self.label_chosen_apis.setGeometry(QtCore.QRect(20, 15, 61, 16))
+        self.label_chosen_apis.setObjectName("chosen_apis")
 
         self.button_clear = QtWidgets.QPushButton(dialog)
         self.button_clear.clicked.connect(self.clear_apis_list)
-        self.button_clear.setGeometry(QtCore.QRect(460, 10, 91, 25))
+        self.button_clear.setGeometry(QtCore.QRect(329, 10, 91, 25))
         self.button_clear.setObjectName("clear")
 
         self.retranslateUi(dialog)
@@ -146,3 +186,15 @@ class malganDialog(object):
         self.button_add_to_api_list.setText(_translate("Dialog", "Add to API list."))
         self.label_list_of_apis.setText(_translate("Dialog", "List of apis."))
         self.label_chosen_apis.setText(_translate("Dialog", "Chosen apis."))
+        self.z_label.setText(_translate("Dialog", "Z:"))
+        self.batch_size_label.setText(_translate("Dialog", "Batch size:"))
+        self.num_epochs_label.setText(_translate("Dialog", "Num epochs:"))
+        self.console_label.setText(_translate("Dialog", "Console."))
+        self.hidden_size_gen_label.setText(_translate("Dialog", "Hidden size generator."))
+        self.hidden_size_dis_label.setText(_translate("Dialog", "Hidden size discriminator."))
+
+        self.z_textbox.setText("10")
+        self.batch_size_textbox.setText("32")
+        self.num_epochs_textbox.setText("100")
+        self.hidden_size_gen_textbox.setText("256")
+        self.hidden_size_dis_textbox.setText("256")
