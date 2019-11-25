@@ -15,7 +15,6 @@ api_func_in_string.sort()
 class malganDialog(object):
     def __init__(self, main_fct):
         self.main_fct = main_fct
-        self.main_fct_process = multiprocessing.Process(target=self.main_fct)
 
         self.final_list_of_apis = None
 
@@ -67,9 +66,18 @@ class malganDialog(object):
     def updateStartButton(self):
         self.final_list_of_apis = self.getListOfApis()
 
-        self.main_fct_process = multiprocessing.Process(target=self.main_fct, args=(self.final_list_of_apis,))
+        try:
+            z = int(self.z_textbox.text())
+            batch_size = int(self.batch_size_textbox.text())
+            num_epochs = int(self.num_epochs_textbox.text())
+            hidden_size_gen = int(self.hidden_size_gen_textbox.text())
+            hidden_size_dis = int(self.hidden_size_dis_textbox.text())
 
-        self.rewriteStartButton()
+            self.main_fct_process = multiprocessing.Process(target=self.main_fct, args=(z, batch_size, num_epochs, hidden_size_gen, hidden_size_dis, self.final_list_of_apis))
+
+            self.rewriteStartButton()
+        except:
+            self.consoleListWidget.addItem("Invalid parameters.")
 
     def rewriteStartButton(self):
         self.button_start = QtWidgets.QPushButton(self.dialog)
@@ -198,3 +206,10 @@ class malganDialog(object):
         self.num_epochs_textbox.setText("100")
         self.hidden_size_gen_textbox.setText("256")
         self.hidden_size_dis_textbox.setText("256")
+
+        z = int(self.z_textbox.text())
+        batch_size = int(self.batch_size_textbox.text())
+        num_epochs = int(self.num_epochs_textbox.text())
+        hidden_size_gen = int(self.hidden_size_gen_textbox.text())
+        hidden_size_dis = int(self.hidden_size_dis_textbox.text())
+        self.main_fct_process = multiprocessing.Process(target=self.main_fct, args=(z, batch_size, num_epochs, hidden_size_gen, hidden_size_dis, self.final_list_of_apis))

@@ -1,4 +1,3 @@
-import argparse
 import pickle
 import sys
 from pathlib import Path
@@ -12,69 +11,6 @@ from malgan import MalGAN, MalwareDataset, BlackBoxDetector
 from malgan.app import AppWindow
 from script import genscript
 from script.genscript import *
-
-
-def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-
-    parser.add_argument("Z", help="Dimension of the latent vector", type=int, default=10)
-    parser.add_argument("batch_size", help="Batch size", type=int, default=32)
-    parser.add_argument("num_epoch", help="Number of training epochs", type=int, default=100)
-
-    message = "Data file contacting the %s feature vectors"
-    for mode in ["malware", "benign"]:
-        parser.add_argument(mode[:3] + "_file", help=message % mode, type=str, default="data/%s.npy" % mode)
-
-    help_message = " ".join(["Dimension of the hidden layer(s) in the GENERATOR."
-                             "Multiple layers should be space separated"])
-
-    parser.add_argument("--gen-hidden-sizes", help=help_message, type=int,
-                        default=[256, 256], nargs="+")
-
-    help_message = " ".join(["Dimension of the hidden layer(s) in the DISCRIMINATOR."
-                             "Multiple layers should be space separated"])
-
-    parser.add_argument("--discrim-hidden-sizes", help=help_message, type=int,
-                        default=[256, 256], nargs="+")
-
-    help_message = " ".join(["Activation function for the generator and discriminator hidden",
-                             "layer(s). Valid choices (case insensitive) are: \"ReLU\", \"ELU\",",
-                             "\"LeakyReLU\", \"tanh\" and \"sigmoid\"."])
-
-    parser.add_argument("--activation", help=help_message, type=str, default="LeakyReLU")
-
-    help_message = " ".join(["Path to a pretrained .pth file.", "If None, a model will be trained"])
-
-    parser.add_argument("--pth", help=help_message, type=Path)
-
-    help_message = ["Learner algorithm used in the black box detector. Valid choices (case ",
-                    "insensitive) include:"]
-
-    names = BlackBoxDetector.Type.names()
-    for i, type_name in enumerate(names):
-        if i > 0 and len(names) > 2:
-            help_message.append(",")
-
-        if len(names) > 1 and i == len(names) - 1:
-            help_message.append(" and")
-
-        help_message.extend([" \"", type_name, "\""])
-    help_message.append(".")
-    parser.add_argument("--detector", help="".join(help_message), type=str,
-                        default=BlackBoxDetector.Type.RandomForest.name)
-
-    args = parser.parse_args()
-    args.activation = _configure_activation_function(args.activation)
-    args.detector = BlackBoxDetector.Type.get_classifier_from_name(args.detector)
-
-    args.mal_file = Path(args.mal_file)
-    args.ben_file = Path(args.ben_file)
-    for (name, path) in (("malware", args.mal_file), ("benign", args.ben_file)):
-        if path.exists():
-            continue
-        print(f"Unknown %s file \"%s\"" % (name, str(path)))
-        sys.exit(1)
-    return args
 
 
 def _configure_activation_function(name_of_activation_func: str) -> nn.Module:
@@ -103,24 +39,36 @@ def load_dataset(file_path: Union[str, Path], labels: int) -> MalwareDataset:
     return MalwareDataset(data=data, classes=labels)
 
 
-def main(list_of_apis_to_use=None):
+def main(z, batch_size, num_epochs, hidden_size_gen, hidden_size_dis, list_of_apis_to_use=None):
     if list_of_apis_to_use is None:
         list_of_apis_to_use = []
 
-    args = parse_args()
+    mal_file = "data/trial_mal.npy"
+    ben_file = "data/trial_ben.npy"
 
-    MalGAN.MALWARE_BATCH_SIZE = args.batch_size
+    activation = _configure_activation_function("LeakyReLU")
+    detector = BlackBoxDetector.Type.get_classifier_from_name(BlackBoxDetector.Type.RandomForest.name)
 
-    malgan = MalGAN(load_dataset(args.mal_file, MalGAN.Label.Malware.value),
-                    load_dataset(args.ben_file, MalGAN.Label.Benign.value),
-                    dim_noise_vect=args.Z,
-                    hidden_layer_width_generator=args.gen_hidden_sizes,
-                    hidden_layer_width_discriminator=args.discrim_hidden_sizes,
-                    generator_hidden=args.activation,
-                    detector_type=args.detector,
-                    path=args.pth)
-    if not args.pth:
-        malgan.fit(args.num_epoch)
+    mal_file = Path(mal_file)
+    ben_file = Path(ben_file)
+    for (name, path) in (("malware", mal_file), ("benign", ben_file)):
+        if path.exists():
+            continue
+        print(f"Unknown %s file \"%s\"" % (name, str(path)))
+        sys.exit(1)
+
+    MalGAN.MALWARE_BATCH_SIZE = batch_size
+
+    malgan = MalGAN(load_dataset(mal_file, MalGAN.Label.Malware.value),
+                    load_dataset(ben_file, MalGAN.Label.Benign.value),
+                    dim_noise_vect=z,
+                    hidden_layer_width_generator=hidden_size_gen,
+                    hidden_layer_width_discriminator=hidden_size_dis,
+                    generator_hidden=activation,
+                    detector_type=detector,
+                    path=None)
+
+    malgan.fit(num_epochs)
 
     malgan = malgan.cpu()
 
