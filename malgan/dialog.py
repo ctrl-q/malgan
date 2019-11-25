@@ -23,10 +23,20 @@ class malganDialog(object):
     def start_main_fct_thread(self):
         if self.main_fct_process.is_alive():
             self.main_fct_process.terminate()
+        try:
+            z = int(self.z_textbox.text())
+            batch_size = int(self.batch_size_textbox.text())
+            num_epochs = int(self.num_epochs_textbox.text())
+            hidden_size_gen = int(self.hidden_size_gen_textbox.text())
+            hidden_size_dis = int(self.hidden_size_dis_textbox.text())
 
-        self.main_fct_process.start()
+            self.main_fct_process = multiprocessing.Process(target=self.main_fct, args=(z, batch_size, num_epochs, hidden_size_gen, hidden_size_dis, self.final_list_of_apis))
 
-        self.consoleListWidget.addItem("App started successfully.")
+            self.main_fct_process.start()
+
+            self.consoleListWidget.addItem("App started successfully.")
+        except:
+            self.consoleListWidget.addItem("Invalid parameters.")
 
     def stop_main_fct_process(self):
         if self.main_fct_process.is_alive():
