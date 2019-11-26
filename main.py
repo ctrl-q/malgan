@@ -34,6 +34,8 @@ def load_dataset(file_path: Union[str, Path], labels: int) -> MalwareDataset:
     elif file_extension == ".pk":
         with open(str(file_path), "rb") as f_in:
             data = pickle.load(f_in)
+    elif file_extension == ".csv":
+        data = np.loadtxt(file_path, delimiter=",", skiprows=1)
     else:
         raise ValueError("Unknown file extension.  Cannot determine how to import")
     return MalwareDataset(data=data, classes=labels)
