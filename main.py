@@ -1,9 +1,7 @@
-import pickle
 import sys
 from pathlib import Path
 from typing import Union
 
-import torch
 from PyQt5.QtWidgets import QApplication
 from torch import nn
 
@@ -11,57 +9,21 @@ from malgan import MalGAN, MalwareDataset, BlackBoxDetector
 from malgan.app import AppWindow
 from script import genscript
 from script.genscript import *
-
-
-def _configure_activation_function(name_of_activation_func: str) -> nn.Module:
-    name_of_activation_func = name_of_activation_func.lower()  # Make case insensitive
-
-    act_funcs = [("relu", nn.ReLU), ("elu", nn.ELU), ("leakyrelu", nn.LeakyReLU), ("tanh", nn.Tanh),
-                 ("sigmoid", nn.Sigmoid)]
-
-    for func_name, module in act_funcs:
-        if name_of_activation_func == func_name.lower():
-            return module
-    raise ValueError("Unknown activation function: \"%s\"" % name_of_activation_func)
-
-
-def load_dataset(file_path: Union[str, Path], labels: int) -> MalwareDataset:
-    file_extension = Path(file_path).suffix
-    if file_extension in {".npy", ".npz"}:
-        data = np.load(file_path)
-    elif file_extension in {".pt", ".pth"}:
-        data = torch.load(str(file_path))
-    elif file_extension == ".pk":
-        with open(str(file_path), "rb") as f_in:
-            data = pickle.load(f_in)
-    elif file_extension == ".csv":
-        data = np.loadtxt(file_path, delimiter=",", skiprows=1)
-    else:
-        raise ValueError("Unknown file extension.  Cannot determine how to import")
-    return MalwareDataset(data=data, classes=labels)
+import numpy as np
 
 
 def main(z, batch_size, num_epochs, hidden_size_gen, hidden_size_dis, pretrained_model_path, list_of_apis_to_use=None):
     if list_of_apis_to_use is None:
         list_of_apis_to_use = []
 
-    if (pretrained_model_path != ""):
-        try:
-            pretrained_model_path = Path(pretrained_model_path)
-        except:
-            print("Invalid path. Now training a new model.")
-            pretrained_model_path = None
-    else:
-        pretrained_model_path = None
+    if pretrained_model_path:
+        pretrained_model_path = Path(pretrained_model_path)
 
-    mal_file = "data/trial_mal.npy"
-    ben_file = "data/trial_ben.npy"
+    here = Path(__file__).absolute().parent
+    mal_file = here / "data/benign.csv"
+    ben_file = here / "data/malware.csv"
 
-    activation = _configure_activation_function("LeakyReLU")
     detector = BlackBoxDetector.Type.get_classifier_from_name(BlackBoxDetector.Type.RandomForest.name)
-
-    mal_file = Path(mal_file)
-    ben_file = Path(ben_file)
     for (name, path) in (("malware", mal_file), ("benign", ben_file)):
         if path.exists():
             continue
@@ -70,16 +32,16 @@ def main(z, batch_size, num_epochs, hidden_size_gen, hidden_size_dis, pretrained
 
     MalGAN.MALWARE_BATCH_SIZE = batch_size
 
-    malgan = MalGAN(load_dataset(mal_file, MalGAN.Label.Malware.value),
-                    load_dataset(ben_file, MalGAN.Label.Benign.value),
+    malgan = MalGAN(MalwareDataset(data=np.loadtxt(mal_file, delimiter=",", skiprows=1), classes=MalGAN.Label.Malware.value),
+                    MalwareDataset(data=np.loadtxt(ben_file, delimiter=",", skiprows=1), classes=MalGAN.Label.Benign.value),
                     dim_noise_vect=z,
                     hidden_layer_width_generator=hidden_size_gen,
                     hidden_layer_width_discriminator=hidden_size_dis,
-                    generator_hidden=activation,
+                    generator_hidden=nn.LeakyReLU,
                     detector_type=detector,
                     path=pretrained_model_path)
 
-    if pretrained_model_path is None:
+    if not pretrained_model_path:
         malgan.fit(num_epochs)
 
     malgan = malgan.cpu()
