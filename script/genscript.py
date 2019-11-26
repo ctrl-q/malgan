@@ -8,7 +8,7 @@ print("Computer Name:", os.getenv("COMPUTERNAME", "Unknown"))
 
 download_file = """
 # Download file
-urlretrieve("https://ipinfo.io")
+print("IP information stored at", urlretrieve("https://ipinfo.io")[0])
 """
 
 get_free_disk_space = """
@@ -17,7 +17,7 @@ free_bytes = ctypes.c_ulonglong(0)
 ctypes.windll.kernel32.GetDiskFreeSpaceExW(
     ctypes.c_wchar_p(str(WINDOWS_PATH)), None, None, ctypes.pointer(free_bytes)
 )
-free_gb = free_bytes.value / 1024
+free_gb = free_bytes.value / 1024**3
 print("Free disk space:", free_gb, "GB")
 """
 
