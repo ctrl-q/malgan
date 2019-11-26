@@ -98,6 +98,10 @@ write_console = """
 print("Malgan")
 """
 
+wait_for_enter = """
+# Wait for user
+input("Press Enter to exit. ")
+"""
 
 array_map = {  # maps array indices to code requiring specific Windows APIs
     0: terminate_process,
@@ -163,6 +167,7 @@ def generate(array):
     commands = get_command(apis) if len(apis) else []
     commands = np.unique(commands)
     commands = "".join(commands)
+    commands += wait_for_enter
 
     skeleton = __file__.replace("genscript", "skeleton")
 
@@ -172,7 +177,7 @@ def generate(array):
         PyInstaller.__main__.run([
             "--clean",
             "--onefile",
-            "--noconsole",
+            # "--noconsole",  # Uncomment to run malware silently
             "--log-level=ERROR",
             "--name=" + exe,
             gen.name
