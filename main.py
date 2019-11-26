@@ -1,6 +1,5 @@
 import sys
 from pathlib import Path
-from typing import Union
 
 from PyQt5.QtWidgets import QApplication
 from torch import nn
@@ -8,7 +7,6 @@ from torch import nn
 from malgan import MalGAN, MalwareDataset, BlackBoxDetector
 from malgan.app import AppWindow
 from script import genscript
-from script.genscript import *
 import numpy as np
 
 
