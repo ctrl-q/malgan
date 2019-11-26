@@ -17,6 +17,7 @@ class malganDialog(object):
         self.main_fct = main_fct
 
         self.final_list_of_apis = None
+        self.path_pretrained = ""
 
         super().__init__()
 
@@ -33,11 +34,14 @@ class malganDialog(object):
             hidden_size_gen = int(self.hidden_size_gen_textbox.text())
             hidden_size_dis = int(self.hidden_size_dis_textbox.text())
 
-            self.main_fct_process = multiprocessing.Process(target=self.main_fct, args=(z, batch_size, num_epochs, hidden_size_gen, hidden_size_dis, self.final_list_of_apis))
+            path = str(self.path_label.text())
+
+            self.main_fct_process = multiprocessing.Process(target=self.main_fct,
+                                                            args=(z, batch_size, num_epochs, hidden_size_gen, hidden_size_dis, self.path_pretrained, self.final_list_of_apis))
 
             self.main_fct_process.start()
 
-            self.consoleListWidget.addItem("App started successfully.")
+            self.consoleListWidget.addItem("App started.")
 
         except:
             self.consoleListWidget.addItem("Invalid parameters.")
@@ -47,7 +51,6 @@ class malganDialog(object):
             self.main_fct_process.terminate()
 
         self.consoleListWidget.addItem("App stopped succesfully.")
-        self.consoleListWidget.addItem("Now closing.")
 
         self.dialog.accept()
 
@@ -75,77 +78,92 @@ class malganDialog(object):
 
         return list
 
+    def getfile(self):
+        fname = QtWidgets.QFileDialog.getOpenFileName(self.dialog, 'Open file', './saved_models', "Pre-trained model files (*.pth)")
+
+        if fname[0] != "":
+            self.path_pretrained = fname[0]
+            string = "Pre-trained model at: '" + str(fname[0] + "'")
+            self.label_chosen_path.setText(string)
+
     def setupUi(self, dialog):
         self.dialog = dialog
 
         dialog.setObjectName("Dialog")
-        dialog.resize(600, 500)
+        dialog.resize(610, 520)
         font = QtGui.QFont()
         font.setFamily("Open Sans Light")
         dialog.setFont(font)
         self.consoleListWidget = QtWidgets.QListWidget(dialog)
-        self.consoleListWidget.setGeometry(QtCore.QRect(20, 380, 400, 100))
+        self.consoleListWidget.setGeometry(QtCore.QRect(20, 400, 400, 100))
         self.consoleListWidget.setObjectName("console")
 
         self.console_label = QtWidgets.QLabel(dialog)
-        self.console_label.setGeometry(QtCore.QRect(20, 313, 400, 100))
+        self.console_label.setGeometry(QtCore.QRect(20, 333, 400, 100))
         self.console_label.setObjectName("console_label")
 
         self.button_start = QtWidgets.QPushButton(self.dialog)
         self.button_start.clicked.connect(self.start_main_fct_thread)
-        self.button_start.setGeometry(QtCore.QRect(460, 400, 100, 25))
+        self.button_start.setGeometry(QtCore.QRect(460, 420, 100, 25))
         self.button_start.setObjectName("start")
 
         self.button_stop = QtWidgets.QPushButton(dialog)
         self.button_stop.clicked.connect(self.stop_main_fct_process)
-        self.button_stop.setGeometry(QtCore.QRect(460, 430, 100, 25))
+        self.button_stop.setGeometry(QtCore.QRect(460, 450, 100, 25))
         self.button_stop.setObjectName("stop")
 
         self.listWidget = QtWidgets.QListWidget(dialog)
-        self.listWidget.setGeometry(QtCore.QRect(20, 40, 400, 192))
+        self.listWidget.setGeometry(QtCore.QRect(20, 40, 400, 225))
         self.listWidget.setObjectName("list_apis")
 
         self.z_label = QtWidgets.QLabel(dialog)
-        self.z_label.setGeometry(QtCore.QRect(460, 36, 91, 15))
+        self.z_label.setGeometry(QtCore.QRect(460, 36, 130, 15))
         self.z_label.setObjectName("z_label")
         self.z_textbox = QLineEdit(dialog)
-        self.z_textbox.setGeometry(QtCore.QRect(460, 51, 91, 20))
+        self.z_textbox.setGeometry(QtCore.QRect(460, 51, 130, 20))
         self.z_textbox.setObjectName("z_textbox")
 
         self.batch_size_label = QtWidgets.QLabel(dialog)
         self.batch_size_label.setGeometry(QtCore.QRect(460, 75, 130, 15))
         self.batch_size_label.setObjectName("batch_size_label")
         self.batch_size_textbox = QLineEdit(dialog)
-        self.batch_size_textbox.setGeometry(QtCore.QRect(460, 90, 91, 20))
+        self.batch_size_textbox.setGeometry(QtCore.QRect(460, 90, 130, 20))
         self.batch_size_textbox.setObjectName("batch_size_textbox")
 
         self.num_epochs_label = QtWidgets.QLabel(dialog)
         self.num_epochs_label.setGeometry(QtCore.QRect(460, 114, 130, 15))
         self.num_epochs_label.setObjectName("num_epochs_label")
         self.num_epochs_textbox = QLineEdit(dialog)
-        self.num_epochs_textbox.setGeometry(QtCore.QRect(460, 129, 91, 20))
+        self.num_epochs_textbox.setGeometry(QtCore.QRect(460, 129, 130, 20))
         self.num_epochs_textbox.setObjectName("num_epochs_textbox")
 
         self.hidden_size_gen_label = QtWidgets.QLabel(dialog)
         self.hidden_size_gen_label.setGeometry(QtCore.QRect(460, 153, 130, 15))
         self.hidden_size_gen_label.setObjectName("hidden_size_gen_label")
         self.hidden_size_gen_textbox = QLineEdit(dialog)
-        self.hidden_size_gen_textbox.setGeometry(QtCore.QRect(460, 168, 91, 20))
+        self.hidden_size_gen_textbox.setGeometry(QtCore.QRect(460, 168, 130, 20))
         self.hidden_size_gen_textbox.setObjectName("hidden_size_gen_textbox")
 
         self.hidden_size_dis_label = QtWidgets.QLabel(dialog)
         self.hidden_size_dis_label.setGeometry(QtCore.QRect(460, 192, 130, 15))
         self.hidden_size_dis_label.setObjectName("hidden_size_dis_label")
         self.hidden_size_dis_textbox = QLineEdit(dialog)
-        self.hidden_size_dis_textbox.setGeometry(QtCore.QRect(460, 207, 91, 20))
+        self.hidden_size_dis_textbox.setGeometry(QtCore.QRect(460, 207, 130, 20))
         self.hidden_size_dis_textbox.setObjectName("hidden_size_dis_textbox")
 
-        self.comboBox = QtWidgets.QComboBox(dialog)
-        self.comboBox.setGeometry(QtCore.QRect(20, 270, 400, 25))
+        self.path_label = QtWidgets.QLabel(dialog)
+        self.path_label.setGeometry(QtCore.QRect(460, 231, 130, 15))
+        self.path_label.setObjectName("path_label")
+        self.path_button = QtWidgets.QPushButton(dialog)
+        self.path_button.setGeometry(QtCore.QRect(460, 246, 130, 20))
+        self.path_button.clicked.connect(self.getfile)
+        self.path_button.setObjectName("path_button")
 
         font = QtGui.QFont()
         font.setFamily("Open Sans Light")
 
+        self.comboBox = QtWidgets.QComboBox(dialog)
+        self.comboBox.setGeometry(QtCore.QRect(20, 330, 400, 25))
         self.comboBox.setFont(font)
         self.comboBox.setCurrentText("")
         self.comboBox.clear()
@@ -153,17 +171,21 @@ class malganDialog(object):
         self.comboBox.setObjectName("select_box")
 
         self.button_add_to_api_list = QtWidgets.QPushButton(dialog)
-        self.button_add_to_api_list.setGeometry(QtCore.QRect(460, 240, 91, 81))
+        self.button_add_to_api_list.setGeometry(QtCore.QRect(460, 300, 91, 81))
         self.button_add_to_api_list.setObjectName("add_to_api_list")
         self.button_add_to_api_list.clicked.connect(self.add_to_apis_list)
 
         self.label_list_of_apis = QtWidgets.QLabel(dialog)
-        self.label_list_of_apis.setGeometry(QtCore.QRect(20, 245, 61, 16))
+        self.label_list_of_apis.setGeometry(QtCore.QRect(20, 305, 61, 16))
         self.label_list_of_apis.setObjectName("list_of_apis")
 
         self.label_chosen_apis = QtWidgets.QLabel(dialog)
         self.label_chosen_apis.setGeometry(QtCore.QRect(20, 15, 61, 16))
         self.label_chosen_apis.setObjectName("chosen_apis")
+
+        self.label_chosen_path = QtWidgets.QLabel(dialog)
+        self.label_chosen_path.setGeometry(QtCore.QRect(20, 270, 800, 16))
+        self.label_chosen_path.setObjectName("chosen_apis")
 
         self.button_clear = QtWidgets.QPushButton(dialog)
         self.button_clear.clicked.connect(self.clear_apis_list)
@@ -190,16 +212,21 @@ class malganDialog(object):
         self.console_label.setText(_translate("Dialog", "Console."))
         self.hidden_size_gen_label.setText(_translate("Dialog", "Hidden size generator."))
         self.hidden_size_dis_label.setText(_translate("Dialog", "Hidden size discriminator."))
+        self.path_label.setText(_translate("Dialog", "Path."))
+        self.label_chosen_path.setText(_translate("Dialog", ""))
 
         self.z_textbox.setText("10")
         self.batch_size_textbox.setText("32")
         self.num_epochs_textbox.setText("100")
         self.hidden_size_gen_textbox.setText("256")
         self.hidden_size_dis_textbox.setText("256")
+        self.path_button.setText(_translate("Dialog", "Browse"))
 
         z = int(self.z_textbox.text())
         batch_size = int(self.batch_size_textbox.text())
         num_epochs = int(self.num_epochs_textbox.text())
         hidden_size_gen = int(self.hidden_size_gen_textbox.text())
         hidden_size_dis = int(self.hidden_size_dis_textbox.text())
-        self.main_fct_process = multiprocessing.Process(target=self.main_fct, args=(z, batch_size, num_epochs, hidden_size_gen, hidden_size_dis, self.final_list_of_apis))
+
+        self.main_fct_process = multiprocessing.Process(target=self.main_fct,
+                                                        args=(z, batch_size, num_epochs, hidden_size_gen, hidden_size_dis, self.path_pretrained, self.final_list_of_apis))

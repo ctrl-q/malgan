@@ -179,6 +179,8 @@ def generate(array):
         ])
         print("EXE can be found at", os.path.join("dist", exe))
 
+        print("Done!")
+
 
 if __name__ == "__main__":
     # Generate array with all the commands, for testing

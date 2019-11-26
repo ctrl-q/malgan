@@ -39,9 +39,18 @@ def load_dataset(file_path: Union[str, Path], labels: int) -> MalwareDataset:
     return MalwareDataset(data=data, classes=labels)
 
 
-def main(z, batch_size, num_epochs, hidden_size_gen, hidden_size_dis, list_of_apis_to_use=None):
+def main(z, batch_size, num_epochs, hidden_size_gen, hidden_size_dis, pretrained_model_path, list_of_apis_to_use=None):
     if list_of_apis_to_use is None:
         list_of_apis_to_use = []
+
+    if (pretrained_model_path != ""):
+        try:
+            pretrained_model_path = Path(pretrained_model_path)
+        except:
+            print("Invalid path. Now training a new model.")
+            pretrained_model_path = None
+    else:
+        pretrained_model_path = None
 
     mal_file = "data/trial_mal.npy"
     ben_file = "data/trial_ben.npy"
@@ -66,9 +75,10 @@ def main(z, batch_size, num_epochs, hidden_size_gen, hidden_size_dis, list_of_ap
                     hidden_layer_width_discriminator=hidden_size_dis,
                     generator_hidden=activation,
                     detector_type=detector,
-                    path=None)
+                    path=pretrained_model_path)
 
-    malgan.fit(num_epochs)
+    if pretrained_model_path is None:
+        malgan.fit(num_epochs)
 
     malgan = malgan.cpu()
 
